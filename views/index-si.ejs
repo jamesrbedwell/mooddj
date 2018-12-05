@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>mooDJ - Your Face, Your Emotion, Your Music</title>
+</head>
+<body>
+  <h1>Hey <%= name %>, play some music based off your mood!</h1>
+
+  <div class="webcam-screen">
+    <video class="webcam" autoPlay></video>
+    <canvas id="canvas" width="480" height="320" style="display: none"></canvas>
+    <img src="" alt="" class="photo"/>
+    <button class="take-photo-btn">Button</button>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js"></script>
+  <script src="/javascript/webcam.js"></script>
+</body>
+</html>
