@@ -83,45 +83,56 @@ app.get("/", (req, res) => {
           req.session.user_details = response.data;
           let userID = response.data.id
           // get back a list of users playlists and see if "MooDJ Playlist" exists, assign the id to session if it does
-          // fetch(`https://api.spotify.com/v1/users/${userID}/playlists`, {
-          //   method: 'get',
-          //   headers: {
-          //     'Authorization': 'Bearer ' + req.session.access_token,
-          //     'Content-Type': 'application/json'
-          //   },
-          //   json: true
-          // }).then(res => res.json())
-          //   .catch(err => console.log(err))
-          //   .then(data => console.log(data))
-          // })
-
-          // create instance of moodj playlist on user profile and get playlist id back
           fetch(`https://api.spotify.com/v1/users/${userID}/playlists`, {
-            method: 'post',
+            method: 'get',
             headers: {
               'Authorization': 'Bearer ' + req.session.access_token,
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-              'name': 'MooDJ Playlist',
-              'public': 'false',
-              'description': 'A playlist for your mood'
-            }),
             json: true
           }).then(res => res.json())
             .catch(err => console.log(err))
-            .then(data => {
-              req.session.playlist_id = data.id
-              console.log("Playlist created with Playlist ID: " + data.id + ". Saved to Session Playlist ID: " + req.session.playlist_id)
-            
-            // render index page with webcam
-            res.render("index-si", {
-              name: req.session.user_details.display_name
-            });
-          });  
-        })
-    };
-  }
+            .then(playListRes => {
+              let mooDJPlaylistArr = playListRes.items.filter(playlist => {
+                return playlist.name === "MooDJ Playlist"
+              })
+              let mooDJPlaylistID = mooDJPlaylistArr.length > 0 ? mooDJPlaylistArr[0].id : null
+              let mooDJPlaylistLength = mooDJPlaylistArr.length > 0 ? mooDJPlaylistArr[0].tracks.total : 0
+              req.session.playlist_length = mooDJPlaylistLength
+              if (mooDJPlaylistID !== null) {
+                req.session.playlist_id = mooDJPlaylistID
+                req.session.playlistCreated = false
+                console.log("Playlist existed Playlist ID: " + mooDJPlaylistID + ". Saved to Session Playlist ID: " + req.session.playlist_id)
+              } else {
+                // create instance of moodj playlist on user profile and get playlist id back
+                  fetch(`https://api.spotify.com/v1/users/${userID}/playlists`, {
+                    method: 'post',
+                    headers: {
+                      'Authorization': 'Bearer ' + req.session.access_token,
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                      'name': 'MooDJ Playlist',
+                      'public': 'false',
+                      'description': 'A playlist for your mood'
+                    }),
+                    json: true
+                  }).then(res => res.json())
+                    .catch(err => console.log(err))
+                    .then(data => {
+                      req.session.playlist_id = data.id
+                      req.session.playlistCreated = false
+                      console.log("Playlist created with Playlist ID: " + data.id + ". Saved to Session Playlist ID: " + req.session.playlist_id)
+                    })
+              }
+                // render index page with webcam
+              res.render("index-si", {
+                name: req.session.user_details.display_name
+              });
+            })      
+        });  
+    }
+  };
 })
 
 // AWS SETUP
@@ -184,17 +195,19 @@ app.post("/api/receivephoto", (req, res) => {
         return;
       }
       let faceAPIRes = JSON.parse(body)      
-      const emotions = ["anger", "contempt", "disgust", "fear", "happiness", "neutral", "sadness", "surprise"]
-      let highestEmotion = emotions.map(emotion => {
-        let average = faceAPIRes.reduce((accum, object) => {
-          accum += object["faceAttributes"]["emotion"][emotion]
-          return accum
-        },0) / faceAPIRes.length
-        return [emotion, average]
-      }).reduce((accum, mood) => {
-        mood[1] > accum[1] ? accum = mood : accum
-        return accum
-      })[0]
+      let highestEmotion = Object.keys(faceAPIRes[0]["faceAttributes"]["emotion"])
+          .map(emotion => {
+            let average =
+              faceAPIRes.reduce((accum, object) => {
+                accum += object["faceAttributes"]["emotion"][emotion];
+                return accum;
+              }, 0) / faceAPIRes.length;
+            return [emotion, average];
+          })
+          .reduce((accum, mood) => {
+            mood[1] > accum[1] ? (accum = mood) : accum;
+            return accum;
+          })[0];
 
       // GET TIME OF DAY
       let currentHour = new Date().getHours()
@@ -207,8 +220,8 @@ app.post("/api/receivephoto", (req, res) => {
         timeOfDay = "night"
       }
       let songsForPlaylist;
+      console.log(highestEmotion)
       // HIGHEST EMOTION AND TIME OF DAY INTO SONG QUERY TO SPOTIFY
-      console.log(req.session.access_token)
       fetch(`https://api.spotify.com/v1/search?q=${highestEmotion}&type=track`, {
         method: 'get',
         headers: {
@@ -222,10 +235,9 @@ app.post("/api/receivephoto", (req, res) => {
           songsForPlaylist = songRes.tracks.items.map(track => track.uri)
           // ADD QUERIED SONGS TO CREATED PLAYLIST
           let query = songsForPlaylist.join(',')
-          console.log(query)
-          console.log(req.session.playlist_id)
+          let songMethod = req.session.playlistCreated || req.session.playlist_length === 0 ? 'POST' : 'PUT'
           fetch(`https://api.spotify.com/v1/playlists/${req.session.playlist_id}/tracks?uris=${query}`, {
-            method: 'post',
+            method: songMethod,
             headers: {
               'Authorization': 'Bearer ' + req.session.access_token,
               'Content-Type': 'application/json'
@@ -233,7 +245,10 @@ app.post("/api/receivephoto", (req, res) => {
             json: true
           }).then(res => res.json())
             .catch(err => console.log(err))
-            .then(addSongsRes => console.log("Songs Added"))
+            .then(addSongsRes => {
+              req.session.playlist_length === 0 ? req.session.playlist_length = 20 : null
+              console.log("Songs Added")
+            })
             .catch(err => console.log("Songs to Playlist Error"))
       })
       .catch(err => console.log(err)) 
