@@ -35,7 +35,7 @@ app.use(
 app.use(bodyParser.json({ limit: "1000kb" }));
 
 //SPOTIFY OAUTH
-let redirectUri = process.env.REDIRECT_URI || "http://localhost:8888/callback";
+let redirectUri = process.env.REDIRECT_URI;
 
 app.get("/login", function(req, res) {
   res.redirect(spotifyOauth.authorizeClientAccessURL(redirectUri));
