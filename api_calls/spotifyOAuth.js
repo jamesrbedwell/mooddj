@@ -8,7 +8,7 @@ module.exports = {
         response_type: "code",
         client_id: process.env.SPOTIFY_ID,
         scope:
-          "user-read-private user-read-email playlist-modify-private playlist-read-private playlist-modify-public",
+          "user-read-private user-read-email playlist-modify-private playlist-read-private playlist-modify-public user-read-playback-state user-modify-playback-state streaming user-read-birthdate user-read-currently-playing",
         redirect_uri
       })
   },

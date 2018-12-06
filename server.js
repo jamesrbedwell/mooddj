@@ -7,7 +7,7 @@ const express = require("express"),
   spotify = require("./api_calls/spotify"),
   spotifyOauth = require("./api_calls/spotifyOAuth"),
   awsS3 = require("./api_calls/awsS3"),
-  azure = require("./api_calls/azure.js")
+  azure = require("./api_calls/azure.js"),
   funcs = require("./funcs")
 
 app.set("view engine", "ejs");
@@ -50,7 +50,7 @@ app.get("/", (req, res) => {
           let userID = userDetails.data.id
           // get back a list of users playlists and see if "MooDJ Playlist" exists, assign the id to session if it does
           spotify.retrievePlaylists(req, userID)
-            .then(playlistRes => playlistRes.items.filter(playlist => playlist.name === "MooDJ Playlist"))
+            .then(playlistRes => playlistRes.items.filter(playlist => playlist.name === "mooDJ Playlist"))
             .then(mooDJPlaylistArr => {
               return {
                 id: mooDJPlaylistArr.length > 0 ? mooDJPlaylistArr[0].id : null,
@@ -62,26 +62,29 @@ app.get("/", (req, res) => {
               if (mooDJPlaylist.id) {
                 req.session.playlist_id = mooDJPlaylist.id
                 req.session.playlistCreated = false
-                console.log("Playlist existed Playlist ID: " + mooDJPlaylist.id + ". Saved to Session Playlist ID: " + req.session.playlist_id)
+                return
               } else {
                 // create instance of moodj playlist on user profile and get playlist id back
-                spotify.createPlaylist(req, userID)
+              return spotify.createPlaylist(req, userID)
                   .then(data => {
                     req.session.playlist_id = data.id
                     req.session.playlistCreated = false
-                    console.log("Playlist created with Playlist ID: " + data.id + ". Saved to Session Playlist ID: " + req.session.playlist_id)
+                    return 
                   })
               }
             }).then(() => {
-              // render index page with webcam
+              let theTrack = "spotify:track:4w3tQBXhn5345eUXDGBWZG"
+              return spotify.addTracksToPlaylist(req, theTrack, 'PUT')
+                .then(trackAdded => trackAdded)
+            }).then(() => {
               res.render("index-si", {
                 name: req.session.user_details.display_name
-              });
+              })
             })
         })      
     };  
   }
-});
+})
 
 // API POST REQUEST FROM FRONT END
 app.post("/api/receivephoto", (req, res) => {
@@ -111,22 +114,57 @@ app.post("/api/receivephoto", (req, res) => {
           }) 
         .catch(err => console.log(`Auzure Error ${err}`))
         .then(emotion => {
-          console.log(emotion)
           let trackQuery = `${emotion}+${funcs.getTimeOfDay()}`
           spotify.getTracks(req, trackQuery)
             .then(songRes => {
               let songsQuery = songRes.tracks.items.map(track => track.uri).join(',')
-              let songMethod = req.session.playlistCreated || req.session.playlist_length === 0 ? 'POST' : 'PUT'
-              return spotify.addTracksToPlaylist(req, req.session.playlist_id, songsQuery, songMethod)
+              return spotify.addTracksToPlaylist(req, songsQuery, 'PUT')
             })
             .then(songsAdded => {
               req.session.playlist_length === 0 ? req.session.playlist_length = 20 : null
-              console.log("Songs Added")
+              res.json({
+                emotion
+              })
             })
             .catch(err => console.log(`Songs to Playlist Error: ${err}`))
+          // spotify.getTracksInMooDJPlaylist(req)
+            // .then(mooDJPlaylistTracks => {
+            //   console.log(req.session.currentTrack)
+            //   if (req.session.currentTrack !== 0) {
+            //     return mooDJPlaylistTracks['items'].reduce((acc, cur) => {
+            //         cur['track']['id'] === req.session.currentTrack['track']['id'] ? acc : acc.push({"uri": cur['track']['uri']})
+            //         return acc
+            //       },[])
+            //   }
+            // })
+            // .catch(err => console.log(`Current Playlist Track Error: ${err}`))
+            // .then(songsToDelete => {
+            //   console.log(songsToDelete)
+            //   return spotify.deleteTracksFromPlaylist(req, songsToDelete)
+            // })
+            // .catch(err => `Delete Error: ${err}`)
+            // .then(songsDeleted => {
         })
         .catch(err => console.log(err)) 
+      })
+})
+
+app.get('/api/access_token', (req, res) => {
+    res.json({
+      accessToken: req.session.access_token
     })
+  }
+)
+
+app.post('/api/startmusic', (req, res) => {
+  spotify.playMooDJ(req)
+    .then(data => {
+      res.json({
+        songStarted: data
+      })
+    })
+    .catch(err => console.log(err))
+  
 })
 
 app.listen(PORT, () => {

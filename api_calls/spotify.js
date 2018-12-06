@@ -29,7 +29,7 @@ module.exports = {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        'name': 'MooDJ Playlist',
+        'name': 'mooDJ Playlist',
         'public': 'false',
         'description': 'A playlist for your mood'
       }),
@@ -45,13 +45,14 @@ module.exports = {
         'Authorization': 'Bearer ' + req.session.access_token,
         'Content-Type': 'application/json',
         'Accept': 'application/json'
-      }
+      },
+      json: true
     }).then(res => res.json())
       .catch(err => console.log(err))    
   },
 
-  addTracksToPlaylist(req, playlist, tracks, method) {
-    return fetch(`https://api.spotify.com/v1/playlists/${playlist}/tracks?uris=${tracks}`, {
+  addTracksToPlaylist(req, tracks, method) {
+    return fetch(`https://api.spotify.com/v1/playlists/${req.session.playlist_id}/tracks?uris=${tracks}`, {
       method,
       headers: {
         'Authorization': 'Bearer ' + req.session.access_token,
@@ -59,8 +60,68 @@ module.exports = {
       },
       json: true
     }).then(res => res.json())
-      .catch(err => console.log(err))
-            
+      .catch(err => console.log(err))         
+  },
+
+  getTracksInMooDJPlaylist(req) {
+    return fetch(`https://api.spotify.com/v1/playlists/${req.session.playlist_id}/tracks`, {
+      method: 'get',
+      headers: {
+        'Authorization': 'Bearer ' + req.session.access_token,
+        'Content-Type': 'application/json'
+      },
+      json: true
+    }).then(res => res.json())
+      .catch(err => console.log(err)) 
+  },
+
+  deleteTracksFromPlaylist(req, tracks) {
+    return fetch(`https://api.spotify.com/v1/playlists/${req.session.playlist_id}/tracks`, {
+      method: 'delete',
+      headers: {
+        'Authorization': 'Bearer ' + req.session.access_token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        "tracks": tracks
+      }),
+      json: true
+    }).then(res => res.json())
+    .catch(err => console.log(err))
+  },
+
+  playMooDJ(req) {
+    return fetch("https://api.spotify.com/v1/me/player/play", {
+      method: 'put',
+      headers: {
+        'Authorization': 'Bearer ' + req.session.access_token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        "context_uri": `spotify:playlist:${req.session.playlist_id}`
+      }),
+      json: true
+    })
+  },
+
+  playNextTrack(req) {
+    return fetch("https://api.spotify.com/v1/me/player/next", {
+      method: 'post',
+      headers: {
+        'Authorization': 'Bearer ' + req.session.access_token,
+      },
+      json: true
+    })
+  },
+
+  getCurrentTrack(req) {
+    return fetch("https://api.spotify.com/v1/me/player/currently-playing", {
+      method: 'get',
+      headers: {
+        'Authorization': 'Bearer ' + req.session.access_token,
+      }
+    }).then(res => res.json())
+    .catch(err => console.log(err))
   }
 
 }

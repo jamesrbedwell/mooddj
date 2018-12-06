@@ -5,16 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>mooDJ - Your Face, Your Emotion, Your Music</title>
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700|Roboto:100,400,700" rel="stylesheet">
+  <link rel="stylesheet" href="/styles/main.css">
 </head>
-<body>
-  <h1>Hey <%= name %>, play some music based off your mood!</h1>
-
+<body class="signed-in">
+  <h1>mooDJ</h1>
+  <h2>Hey <span><%= name %></span>, play some music based off your mood!</h2>
+  <div class="btn-wrapper">
+    <div class="index-btns">
+      <button class="start-music-btn">Start The Music!</button>
+    </div>
+    <div class="index-btns">
+      <button class="take-photo-btn">Get Your Mood!</button>
+    </div>
+  </div>
+  
   <div class="webcam-screen">
     <video class="webcam" autoPlay></video>
-    <canvas id="canvas" width="480" height="320" style="display: none"></canvas>
+    <canvas id="canvas" width="480px" height="360px" style="display: none"></canvas>
     <img src="" alt="" class="photo"/>
-    <button class="take-photo-btn">Button</button>
   </div>
+
+  <div>
+    <h2 class="emotion"></h2>
+  </div>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js"></script>
   <script src="/javascript/webcam.js"></script>
 </body>
