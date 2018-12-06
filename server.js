@@ -10,15 +10,20 @@ const express = require("express"),
   azure = require("./api_calls/azure.js"),
   funcs = require("./funcs"),
   emotions = {
-    "anger": "angry",
-    "contempt": "contempt",
-    "disgust": "disgust",
-    "fear": "scary",
-    "happiness": "happy",
-    "neutral": "neutral",
-    "sadness": "sad",
-    "surprise": "surpise"
+    "anger": ["angry", "fierce", "furious", "enraged"],
+    "contempt": ["contempt", "despite","hatred"],
+    "disgust": ["disgust", "hate", "dislike"],
+    "fear": ["scary", "despair", "dread", "horror"],
+    "happiness": ["happy", "lively", "upbeat", "party"],
+    "neutral": ["neutral", "calm", "cool", "easy"],
+    "sadness": ["sad", "somber", "sorry", "glum"],
+    "surprise": ["surpise", "startled", "stunned"]
   }
+
+function randomEntry(arr) {
+  let rand = Math.floor(Math.randon() * arr.length)
+  return arr[rand]
+}
 
 app.set("view engine", "ejs");
 
@@ -125,7 +130,7 @@ app.post("/api/receivephoto", (req, res) => {
           }) 
         .catch(err => console.log(`Auzure Error ${err}`))
         .then(emotion => {
-          let trackQuery = `${emotions[emotion]}`
+          let trackQuery = `${emotions[randomEntry(emotion)]}`
           spotify.getTracks(req, trackQuery)
             .then(songRes => {
               let songsQuery = songRes.tracks.items.map(track => track.uri).join(',')
