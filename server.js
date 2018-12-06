@@ -48,23 +48,23 @@ app.get("/", (req, res) => {
         .then(userDetails => {
           req.session.user_details = userDetails.data;
           let userID = userDetails.data.id
-          // get back a list of users playlists and see if "MooDJ Playlist" exists, assign the id to session if it does
+          // get back a list of users playlists and see if "MoodDJ Playlist" exists, assign the id to session if it does
           spotify.retrievePlaylists(req, userID)
-            .then(playlistRes => playlistRes.items.filter(playlist => playlist.name === "mooDJ Playlist"))
-            .then(mooDJPlaylistArr => {
+            .then(playlistRes => playlistRes.items.filter(playlist => playlist.name === "moodDJ Playlist"))
+            .then(moodDJPlaylistArr => {
               return {
-                id: mooDJPlaylistArr.length > 0 ? mooDJPlaylistArr[0].id : null,
-                length: mooDJPlaylistArr.length > 0 ? mooDJPlaylistArr[0].tracks.total : 0
+                id: moodDJPlaylistArr.length > 0 ? moodDJPlaylistArr[0].id : null,
+                length: moodDJPlaylistArr.length > 0 ? moodDJPlaylistArr[0].tracks.total : 0
               }
             })
-            .then(mooDJPlaylist => {
-              req.session.playlist_length = mooDJPlaylist.length
-              if (mooDJPlaylist.id) {
-                req.session.playlist_id = mooDJPlaylist.id
+            .then(moodDJPlaylist => {
+              req.session.playlist_length = moodDJPlaylist.length
+              if (moodDJPlaylist.id) {
+                req.session.playlist_id = moodDJPlaylist.id
                 req.session.playlistCreated = false
                 return
               } else {
-                // create instance of moodj playlist on user profile and get playlist id back
+                // create instance of mooddj playlist on user profile and get playlist id back
               return spotify.createPlaylist(req, userID)
                   .then(data => {
                     req.session.playlist_id = data.id
@@ -127,11 +127,11 @@ app.post("/api/receivephoto", (req, res) => {
               })
             })
             .catch(err => console.log(`Songs to Playlist Error: ${err}`))
-          // spotify.getTracksInMooDJPlaylist(req)
-            // .then(mooDJPlaylistTracks => {
+          // spotify.getTracksInMoodDJPlaylist(req)
+            // .then(moodDJPlaylistTracks => {
             //   console.log(req.session.currentTrack)
             //   if (req.session.currentTrack !== 0) {
-            //     return mooDJPlaylistTracks['items'].reduce((acc, cur) => {
+            //     return moodDJPlaylistTracks['items'].reduce((acc, cur) => {
             //         cur['track']['id'] === req.session.currentTrack['track']['id'] ? acc : acc.push({"uri": cur['track']['uri']})
             //         return acc
             //       },[])
@@ -157,7 +157,7 @@ app.get('/api/access_token', (req, res) => {
 )
 
 app.post('/api/startmusic', (req, res) => {
-  spotify.playMooDJ(req)
+  spotify.playMoodDJ(req)
     .then(data => {
       res.json({
         songStarted: data

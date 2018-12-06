@@ -29,7 +29,7 @@ module.exports = {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        'name': 'mooDJ Playlist',
+        'name': 'moodDJ Playlist',
         'public': 'false',
         'description': 'A playlist for your mood'
       }),
@@ -63,7 +63,7 @@ module.exports = {
       .catch(err => console.log(err))         
   },
 
-  getTracksInMooDJPlaylist(req) {
+  getTracksInMoodDJPlaylist(req) {
     return fetch(`https://api.spotify.com/v1/playlists/${req.session.playlist_id}/tracks`, {
       method: 'get',
       headers: {
@@ -90,7 +90,7 @@ module.exports = {
     .catch(err => console.log(err))
   },
 
-  playMooDJ(req) {
+  playMoodDJ(req) {
     return fetch("https://api.spotify.com/v1/me/player/play", {
       method: 'put',
       headers: {
