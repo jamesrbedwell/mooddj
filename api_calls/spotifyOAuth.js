@@ -32,7 +32,7 @@ module.exports = {
     request.post(authOptions, function(error, response, body) {
       let access_token = body.access_token;
       req.session.access_token = access_token;
-      let uri = process.env.FRONTEND_URI;
+      let uri = process.env.FRONTEND_URI || "http://localhost:8888"
       redirectFunc(uri)
     });
   }
