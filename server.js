@@ -36,6 +36,7 @@ app.use(bodyParser.json({ limit: "1000kb" }));
 
 //SPOTIFY OAUTH
 let redirectUri = process.env.REDIRECT_URI;
+let redirectUrl = process.env.REDIRECT_URL
 
 app.get("/login", function(req, res) {
   res.redirect(spotifyOauth.authorizeClientAccessURL(redirectUri));
@@ -43,7 +44,7 @@ app.get("/login", function(req, res) {
 
 app.get("/callback", function(req, res) {
   let authCode = req.query.code || null;
-  spotifyOauth.callbackAfterClientReceivesAccess(req, authCode, redirectUri, (uri) => {
+  spotifyOauth.callbackAfterClientReceivesAccess(req, authCode, redirectUrl, (uri) => {
     res.redirect(uri);
   })
 });
