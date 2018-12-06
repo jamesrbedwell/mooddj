@@ -8,7 +8,17 @@ const express = require("express"),
   spotifyOauth = require("./api_calls/spotifyOAuth"),
   awsS3 = require("./api_calls/awsS3"),
   azure = require("./api_calls/azure.js"),
-  funcs = require("./funcs")
+  funcs = require("./funcs"),
+  emotions = {
+    "anger": "angry",
+    "contempt": "contempt",
+    "disgust": "disgust",
+    "fear": "scary",
+    "happiness": "happy",
+    "neutral": "neutral",
+    "sadness": "sad",
+    "surprise": "surpise"
+  }
 
 app.set("view engine", "ejs");
 
@@ -114,7 +124,7 @@ app.post("/api/receivephoto", (req, res) => {
           }) 
         .catch(err => console.log(`Auzure Error ${err}`))
         .then(emotion => {
-          let trackQuery = `${emotion}+${funcs.getTimeOfDay()}`
+          let trackQuery = `${emotions[emotion]}`
           spotify.getTracks(req, trackQuery)
             .then(songRes => {
               let songsQuery = songRes.tracks.items.map(track => track.uri).join(',')
