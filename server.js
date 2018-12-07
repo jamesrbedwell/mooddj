@@ -21,9 +21,10 @@ const express = require("express"),
   }
 
 function randomEntry(arr) {
-  let rand = Math.floor(Math.randon() * arr.length)
+  let rand = Math.floor(Math.random() * arr.length)
   return arr[rand]
 }
+console.log(randomEntry(emotions.anger))
 
 app.set("view engine", "ejs");
 
