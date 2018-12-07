@@ -24,7 +24,6 @@ function randomEntry(arr) {
   let rand = Math.floor(Math.random() * arr.length)
   return arr[rand]
 }
-console.log(randomEntry(emotions.anger))
 
 app.set("view engine", "ejs");
 
@@ -132,7 +131,7 @@ app.post("/api/receivephoto", (req, res) => {
           }) 
         .catch(err => console.log(`Auzure Error ${err}`))
         .then(emotion => {
-          let trackQuery = `${emotions[randomEntry(emotion)]}`
+          let trackQuery = `${randomEntry(emotions.emotion)}`
           spotify.getTracks(req, trackQuery)
             .then(songRes => {
               let songsQuery = songRes.tracks.items.map(track => track.uri).join(',')
